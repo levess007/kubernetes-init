@@ -1,5 +1,7 @@
 #!/bin/bash
 
+if [ $1 -n ]
+then
 echo ------------------------------
 echo "Start with updating package lists"
 echo ------------------------------
@@ -33,3 +35,16 @@ apt install -y kubelet kubeadm kubectl
 echo ------------------------------
 echo "K8s installed"
 echo ------------------------------
+echo "K8s Master Node Initialization"
+echo ------------------------------
+
+sysctl net.bridge.bridge-nf-call-iptables=1
+kubeadm init --apiserver-advertise-address $1
+mkdir -p $HOME/.kube
+cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+chown $(id -u):$(id -g) $HOME/.kube/config
+export kubever=$(kubectl version | base64 | tr -d '\n')
+kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$kubever"
+else
+	echo "usage: install.sh <IP_ADDR>"
+fi
